@@ -23,7 +23,7 @@ WORKDIR /app
 
 # Copy package files and install all dependencies
 COPY package*.json ./
-RUN npm cache clean --force && npm ci --silent
+RUN npm ci --production --silent
 
 # Copy backend source
 COPY backend/ ./backend/
