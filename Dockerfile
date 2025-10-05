@@ -37,6 +37,9 @@ COPY backend/ ./backend/
 # Copy the built frontend from the previous stage
 COPY --from=frontend-build /app/frontend/build ./public
 
+# List the contents of public directory for debugging
+RUN echo "Contents of public directory:" && ls -la ./public/ || echo "Public directory is empty"
+
 # Create .env file in production
 RUN echo "NODE_ENV=production" > .env
 

@@ -40,11 +40,43 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "healthy", timestamp: new Date() });
 });
 
+// Debug route to check if React build files exist
+app.get("/api/debug", (req, res) => {
+  const fs = require('fs');
+  const publicPath = path.join(__dirname, '../public');
+  const indexPath = path.join(publicPath, 'index.html');
+  
+  try {
+    const publicFiles = fs.readdirSync(publicPath);
+    const indexExists = fs.existsSync(indexPath);
+    const indexStats = indexExists ? fs.statSync(indexPath) : null;
+    
+    res.json({
+      publicPath,
+      indexPath,
+      indexExists,
+      indexSize: indexStats ? indexStats.size : null,
+      publicFiles,
+      cwd: process.cwd(),
+      __dirname
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.use("/api/expenses", require("./routes/expenseRoutes"));
 
 // Serve the main app for all other routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  const indexPath = path.join(__dirname, '../public/index.html');
+  console.log(`Serving React app: ${req.path} -> ${indexPath}`);
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error('Error serving index.html:', err);
+      res.status(500).send('Error serving React app');
+    }
+  });
 });
 
 // If this file is run directly (node backend/server.js), start a server for local development.
