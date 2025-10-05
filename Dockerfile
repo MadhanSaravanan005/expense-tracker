@@ -14,7 +14,8 @@ WORKDIR /app
 
 # Copy and install backend dependencies
 COPY package*.json ./
-RUN npm ci --only=production --silent
+COPY backend/package*.json ./backend/
+RUN npm ci --silent && cd backend && npm ci --silent
 
 # Copy backend source
 COPY backend/ ./backend/
