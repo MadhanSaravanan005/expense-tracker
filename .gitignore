@@ -14,9 +14,8 @@ yarn-error.log
 # macOS
 .DS_Store
 
-# Lockfiles (exclude root and backend, but include frontend for Docker)
+# Lockfiles (exclude root only, include frontend and backend for Docker)
 package-lock.json
-backend/package-lock.json
 
 # Editor directories
 .vscode/

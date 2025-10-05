@@ -24,7 +24,12 @@ WORKDIR /app
 # Copy and install backend dependencies
 COPY package*.json ./
 COPY backend/package*.json ./backend/
-RUN npm ci --silent && cd backend && npm ci --silent
+
+# Install dependencies with fallback
+RUN npm cache clean --force && \
+    (npm ci --silent || npm install --silent) && \
+    cd backend && \
+    (npm ci --silent || npm install --silent)
 
 # Copy backend source
 COPY backend/ ./backend/
