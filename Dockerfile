@@ -43,6 +43,10 @@ RUN echo "Contents of public directory:" && ls -la ./public/ || echo "Public dir
 # Create .env file in production
 RUN echo "NODE_ENV=production" > .env
 
+# Show final directory structure
+RUN echo "Final app directory structure:" && find . -maxdepth 3 -type f | head -20
+
 EXPOSE 5000
 
-CMD ["node", "backend/server.js"]
+# Use explicit path to ensure we're running the right file
+CMD ["node", "./backend/server.js"]
