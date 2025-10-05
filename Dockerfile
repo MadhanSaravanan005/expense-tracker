@@ -2,9 +2,18 @@
 FROM node:18-alpine as frontend-build
 
 WORKDIR /app/frontend
+
+# Copy package files
 COPY frontend/package*.json ./
-RUN npm ci --silent
+
+# Clean npm cache and install dependencies
+RUN npm cache clean --force && \
+    npm ci --silent || npm install --silent
+
+# Copy frontend source code
 COPY frontend/ ./
+
+# Build the React app
 RUN npm run build
 
 # Production stage
