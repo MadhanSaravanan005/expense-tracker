@@ -4,24 +4,41 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
 
+console.log("🚀 Starting Expense Tracker application...");
+console.log("📁 Current working directory:", process.cwd());
+console.log("🗂️  __dirname:", __dirname);
+
 dotenv.config();
+console.log("⚙️  Environment variables loaded");
+console.log("🌍 NODE_ENV:", process.env.NODE_ENV || 'not set');
+console.log("🔌 PORT:", process.env.PORT || 'not set');
+console.log("🗄️  MONGO_URI:", process.env.MONGO_URI ? 'configured' : 'not configured');
+
 const app = express();
 app.use(express.json());
 app.use(cors());
 
+console.log("📦 Express middleware configured");
+
 // Serve static files from public folder
 app.use(express.static(path.join(__dirname, '../public')));
 
-mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-})
-  .then(() => console.log("MongoDB connected successfully"))
-  .catch(err => {
-    console.error("MongoDB connection error:", err);
-    console.log("App will continue without database connection");
-    // Don't exit, let the app run for health checks
-  });
+// Connect to MongoDB (with better error handling)
+if (process.env.MONGO_URI) {
+  console.log('Attempting to connect to MongoDB...');
+  mongoose.connect(process.env.MONGO_URI, {
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+  })
+    .then(() => console.log("✅ MongoDB connected successfully"))
+    .catch(err => {
+      console.error("❌ MongoDB connection error:", err.message);
+      console.log("⚠️  App will continue without database connection");
+      // Don't exit, let the app run for health checks
+    });
+} else {
+  console.log("⚠️  No MONGO_URI environment variable found - running without database");
+}
 
 // Add a simple test route
 app.get("/api/test", (req, res) => {
@@ -82,9 +99,36 @@ app.get('*', (req, res) => {
 // If this file is run directly (node backend/server.js), start a server for local development.
 if (require.main === module) {
   const port = process.env.PORT || 5000;
-  app.listen(port, '0.0.0.0', () => {
-    console.log(`Expense Tracker Server running on port ${port}`);
-    console.log(`Health check available at: http://localhost:${port}/api/test`);
+  
+  // Ensure we have a port
+  if (!port) {
+    console.error('No PORT environment variable set');
+    process.exit(1);
+  }
+  
+  console.log(`Starting server on port ${port}...`);
+  console.log(`Current working directory: ${process.cwd()}`);
+  console.log(`__dirname: ${__dirname}`);
+  
+  const server = app.listen(port, '0.0.0.0', () => {
+    console.log(`✅ Expense Tracker Server running on port ${port}`);
+    console.log(`🔍 Health check available at: http://0.0.0.0:${port}/api/test`);
+    console.log(`🔍 Debug info available at: http://0.0.0.0:${port}/api/debug`);
+    console.log(`🌐 Server is listening on all interfaces (0.0.0.0)`);
+  });
+  
+  server.on('error', (err) => {
+    console.error('Server startup error:', err);
+    process.exit(1);
+  });
+  
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    server.close(() => {
+      console.log('Server closed');
+      process.exit(0);
+    });
   });
 } 
 
