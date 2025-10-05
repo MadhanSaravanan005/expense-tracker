@@ -19,12 +19,25 @@ mongoose.connect(process.env.MONGO_URI, {
   .then(() => console.log("MongoDB connected successfully"))
   .catch(err => {
     console.error("MongoDB connection error:", err);
-    process.exit(1);
+    console.log("App will continue without database connection");
+    // Don't exit, let the app run for health checks
   });
 
 // Add a simple test route
 app.get("/api/test", (req, res) => {
-  res.json({ message: "Expense Tracker Backend is working!", timestamp: new Date() });
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  res.json({ 
+    message: "Expense Tracker Backend is working!", 
+    timestamp: new Date(),
+    database: dbStatus,
+    port: process.env.PORT || 5000,
+    nodeEnv: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Add root health check as backup
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "healthy", timestamp: new Date() });
 });
 
 app.use("/api/expenses", require("./routes/expenseRoutes"));
@@ -37,7 +50,10 @@ app.get('*', (req, res) => {
 // If this file is run directly (node backend/server.js), start a server for local development.
 if (require.main === module) {
   const port = process.env.PORT || 5000;
-  app.listen(port, () => console.log(`Expense Tracker Server running on port ${port}`));
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`Expense Tracker Server running on port ${port}`);
+    console.log(`Health check available at: http://localhost:${port}/api/test`);
+  });
 } 
 
 // Export the Express app
